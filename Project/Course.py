@@ -3,10 +3,11 @@ class Homework:
     All information needed for a homework assignment.
     """
 
-    def __init__(self, title, dueDate, percentComp):
+    def __init__(self, title, dueDate, percentComp, course):
         self.__title = title
         self.__dueDate = dueDate
         self.__percentComp = percentComp
+        self.__course = course
 
     def getDueDate(self):
         return self.__dueDate
@@ -16,6 +17,12 @@ class Homework:
 
     def getPercentComp(self):
         return self.__percentComp
+
+    def setPercentComp(self, percentage):
+        self.__percentComp = percentage
+
+    def getCourse(self):
+        return self.__course
 
 class Course:
     """
@@ -53,6 +60,6 @@ class Course:
         return self.__homework
 
     def addHomework(self, title, dueDate, percentComp):
-        assignemnt = Homework(title, dueDate, percentComp)
+        assignemnt = Homework(title, dueDate, percentComp, self.getTitle())
         self.__homework.append(assignemnt)
 

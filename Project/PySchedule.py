@@ -3,6 +3,7 @@ from PyQt4 import QtCore, QtGui, uic
 import os
 import sys
 import json
+from PyScheduleLogic import *
 
 
 class PySchedule(QtGui.QMainWindow):
@@ -16,7 +17,8 @@ class PySchedule(QtGui.QMainWindow):
         """
 
         super().__init__(parent)
-        self.Courses = []
+        self.schduleLogic = PyScheduleLogic()
+
         uic.loadUi('PySchedule.ui', self)
         self.AddCourseButton.clicked.connect(self.addCourse)
         self.AddAssignmentButton.clicked.connect(self.addAssignment)
@@ -89,12 +91,10 @@ class PySchedule(QtGui.QMainWindow):
 
         if result == QtGui.QMessageBox.Yes:
             # Find the asignment to edit
-            for c in self.Courses:
-                if c.getTitle() == courseTitle:
-                    self.Courses.remove(c)
-                    break
-            self.updateScheduleView()
-            self.updateNotificationView()
+            if self.schduleLogic.deleteCourse(courseTitle):
+                self.updateScheduleView()
+                self.updateNotificationView()
+
 
     def expandNotification(self):
         """
@@ -134,7 +134,7 @@ class PySchedule(QtGui.QMainWindow):
 
         if result == QtGui.QMessageBox.Save:
             # Find the asignment to edit
-            for c in self.Courses:
+            for c in self.schduleLogic.getCourses():
                 if c.getTitle() == assignmentDetails[1]:
                     # now we have the course, find the assignment and update the percent complete
                     for a in c.getHW():
@@ -157,19 +157,7 @@ class PySchedule(QtGui.QMainWindow):
                             self.updateNotificationView()
                             break
 
-    def addAssignmnetLogic(self, title, courseToAddTo, dueDateTime, percentComplete):
-        """
-        The add assignment logic, without touching the actual gui.
-        :param title: Title of assignment to add.
-        :param courseToAddTo: The title of the course we want to add this assignment to.
-        :param dueDateTime: The due date of this assignment.
-        :param percentComplete: Percentage of the assignment that is already completed.
-        :return: None
-        """
 
-        for i in self.Courses:
-            if i.getTitle() == courseToAddTo:
-                i.addHomework(title, dueDateTime, percentComplete)
 
     def addAssignment(self):
         """
@@ -189,7 +177,7 @@ class PySchedule(QtGui.QMainWindow):
             msg.exec_()
             return
 
-        self.addAssignmnetLogic(self.AssignmentTitle.text(), self.CoursesComboBox.currentText(),
+        self.schduleLogic.addAssignmnet(self.AssignmentTitle.text(), self.CoursesComboBox.currentText(),
                                 self.CourseDateTimeEdit.dateTime(), self.AssignmentPercentComplete.value())
         self.updateNotificationView()
 
@@ -205,41 +193,16 @@ class PySchedule(QtGui.QMainWindow):
 
         allHW = []
 
-        for i in self.Courses:
+        for i in self.schduleLogic.getCourses():
             allHW += i.getHW()
 
-        orderedHW = self.__orderOnDateTime(allHW)
+        orderedHW = self.schduleLogic.orderOnDateTime(allHW)
         for a in orderedHW:
             self.NotificationList.addItem("{}\n   {}\n   {}\n   {}% comp\n"
                                           .format(a.getTitle(), a.getCourse(),
                                                   a.getDueDate().toString("ddd MMMM d h:m a"), a.getPercentComp()))
 
-    def addCourseLogic(self, title, location, isMWF, isTTH, startTime, endTime):
-        """
-        This is the add course logic, this will add a course to the given assignment
-        without touching the gui.
 
-        :param title: Title of the Coure to add
-        :param location: Location of the course to add
-        :param isMWF: Bool, is course on MWF
-        :param isTTH: Bool, is course on TTH
-        :param startTime: QTime of start of course
-        :param endTime: QTime of end of course
-        :return: 0 represents the course is added,
-                 1 represents not all fields are filled in,
-                 2 represents course already exists.
-        """
-
-        if title is "" or location is "" or (not isMWF and not isTTH):
-            return 1
-
-        for course in self.Courses:
-            if course.getTitle() == title:
-                return 2
-
-        c = Course.Course(title, startTime, endTime, location, isMWF, isTTH)
-        self.Courses.append(c)
-        return 0
 
     def addCourse(self):
         """
@@ -249,7 +212,7 @@ class PySchedule(QtGui.QMainWindow):
         :return: None
         """
 
-        didAdd = self.addCourseLogic(self.CourseTitle.text(), self.CourseLocation.text(),
+        didAdd = self.schduleLogic.addCourse(self.CourseTitle.text(), self.CourseLocation.text(),
                                      self.CheckBoxMWF.checkState(), self.CheckBoxTTH.checkState(),
                                      self.CourseTimeStart.time(),
                                      self.CourseTimeEnd.time())
@@ -299,14 +262,14 @@ class PySchedule(QtGui.QMainWindow):
         MWFCourses = []
         TTHCourses = []
 
-        for i in self.Courses:
+        for i in self.schduleLogic.getCourses():
             if i.getIsMWF():
                 MWFCourses.append(i)
             if i.getIsTTH():
                 TTHCourses.append(i)
 
-        MWFCourses = self.__orderOnTime(MWFCourses)
-        TTHCourses = self.__orderOnTime(TTHCourses)
+        MWFCourses = self.schduleLogic.orderOnTime(MWFCourses)
+        TTHCourses = self.schduleLogic.orderOnTime(TTHCourses)
 
         for i in MWFCourses:
             starTimeString = i.getStartTime().toString("h:mm a")
@@ -330,90 +293,21 @@ class PySchedule(QtGui.QMainWindow):
 
         AllItems = [self.CoursesComboBox.itemText(i) for i in range(self.CoursesComboBox.count())]
 
-        for c in self.Courses:
+        for c in self.schduleLogic.getCourses():
             if not AllItems.__contains__(c.getTitle()):
                 self.CoursesComboBox.addItem(c.getTitle())
 
         for i in range(len(AllItems)):
             isInCourse = False
-            for c in self.Courses:
+            for c in self.schduleLogic.getCourses():
                 if c.getTitle() == AllItems[i]:
                     isInCourse = True
             if not isInCourse:
                 self.CoursesComboBox.removeItem(i)
                 i -= i
 
-    def __orderOnTime(self, myList):
-        """
-        Will take myList and order it based on it's time property.
+    #TODO: Move these to logic layer
 
-        :param myList: The list to order.
-        :return: MyList in order of time
-        """
-
-        orderList = []
-
-        for i in range(len(myList)):
-            currentEarlyTime = self.__findEarliestTime(myList)
-            orderList.append(currentEarlyTime)
-            myList.remove(currentEarlyTime)
-            i -= i
-
-        return orderList
-
-    @staticmethod
-    def __findEarliestTime(myList):
-        """
-        Searches through myList and finds the earliest item based on
-        the start time property of the item.
-
-        :param myList: List to find the earliest item.
-        :return: myList item that is the earliest based on time.
-        """
-
-        earliest = myList[0]
-
-        for i in myList:
-            if i.getStartTime() < earliest.getStartTime():
-                earliest = i
-
-        return earliest
-
-    def __orderOnDateTime(self, myList):
-        """
-        Will take myList and order it based on it's date time property.
-
-        :param myList: The list to order.
-        :return: MyList in order of date time
-        """
-
-        orderList = []
-
-        for i in range(len(myList)):
-            currentEarlyDateTime = self.__findEarliestDateTime(myList)
-            orderList.append(currentEarlyDateTime)
-            myList.remove(currentEarlyDateTime)
-            i -= i
-
-        return orderList
-
-    @staticmethod
-    def __findEarliestDateTime(myList):
-        """
-        Searches through myList and finds the earliest item based on
-        the due date property of the item.
-
-        :param myList: List to find the earliest item.
-        :return: myList item that is the earliest based on due date.
-        """
-
-        earliest = myList[0]
-
-        for i in myList:
-            if i.getDueDate() < earliest.getDueDate():
-                earliest = i
-
-        return earliest
 
 def LoadData():
     """
@@ -439,7 +333,7 @@ def LoadData():
             time = c['endTime'].split(":")
             endTime = QtCore.QTime(int(time[0]), int(time[1]))
 
-            mainapplication.addCourseLogic(c['title'], c['location'], c['isMWF'], c['isTTH'], startTime, endTime)
+            mainapplication.schduleLogic.addCourse(c['title'], c['location'], c['isMWF'], c['isTTH'], startTime, endTime)
 
             # int y, int m, int d, int h, int m,
 
@@ -451,7 +345,7 @@ def LoadData():
                     dueDateTime = QtCore.QDateTime(int(dueDate[2]), int(dueDate[0]), int(dueDate[1]), int(dueTime[0]),
                                                    int(dueTime[1]))
 
-                    mainapplication.addAssignmnetLogic(hw['title'], c['title'], dueDateTime, hw['percentCmp'])
+                    mainapplication.schduleLogic.addAssignmnet(hw['title'], c['title'], dueDateTime, hw['percentCmp'])
 
     mainapplication.updateScheduleView()
     mainapplication.updateNotificationView()
@@ -471,11 +365,11 @@ def SaveData():
 
     if __name__ == '__main__':
         with open('{}/{}'.format(saveDir, 'data.json'), 'w') as outfile:
-            if len(mainapplication.Courses) > 0:
+            if len(mainapplication.schduleLogic.getCourses()) > 0:
                 outfile.write('{"courses":[')
 
             numCourses = 0
-            for c in mainapplication.Courses:
+            for c in mainapplication.schduleLogic.getCourses():
                 if numCourses > 0:
                     outfile.write(',')
                 outfile.write('{')
@@ -505,17 +399,17 @@ def SaveData():
                 outfile.write('}')
                 numCourses += 1
 
-            if len(mainapplication.Courses) > 0:
+            if len(mainapplication.schduleLogic.getCourses()) > 0:
                 outfile.write(']}')
             else:
                 # if there are no courses then there is nothing to save
                 # we do not want an empty file, so just delete the one that is thre
                 os.remove(saveDir + "/data.json")
 
-
-app = QtGui.QApplication(sys.argv)
-mainapplication = PySchedule()
-LoadData()
-mainapplication.show()
-app.exec_()
-SaveData()
+if __name__ == '__main__':
+    app = QtGui.QApplication(sys.argv)
+    mainapplication = PySchedule()
+    LoadData()
+    mainapplication.show()
+    app.exec_()
+    SaveData()

@@ -1,0 +1,70 @@
+Installing:
+    To install this program extract the PySchedule-1.0.tar.gz file.
+    Open a terminal window in the directory that where you extracted the files.
+    run:
+        sudo python3 setup.py install
+        
+    note: You MUST run this is sudo to ensure that the package is installed at the root
+    of the system and not inside of your system. The files should be extract
+    to '/usr/local/lib/python3.5/dist-packages'.
+    
+Usage:
+    The program is designed to allow the user to add courses and assignments
+    and keep track of the assignments and track completion percentage of those assignments.
+    
+    The program will automatically save all information when you exit the application.
+    The program will also automatically load the saved data and populate the approprate
+    fields.
+    
+Courses:    
+    Adding a Course:
+        To add a course to the program use the left hand side panel and click the 'Add Course' 
+        tab. Fill in the 'Course Title', Start time and End time, 'Location', and under 'Days',
+        check either 'M, W, F', 'T, TH' or check both. 
+        
+        After all of these fields are filled in, click the 'Add Course' button at the top
+        of the tab. If all of the fields are filled in, then the course will be added to the 
+        correct days that it occurs on. 
+        
+        You may then add additional courses. These courses will be organized based on days
+        it occurs and within each day, the courses will be organized based on start time. 
+        
+    Removing a Course:
+        To remove a course, just double click on the course that you would like to delete. 
+        You can choose any course from any day. You will then be prompted with a popup window
+        asking if you would like to remove the course, choose 'Yes' and the course will be 
+        removed along with all of it's assignments. Choose 'No' if you would like to keep the course.
+        
+Assignments: 
+    Adding an Assignment:
+        Note: You may only add an assignment if you have at least one course already added.
+            See 'Adding a Course' in the 'Courses' section above.
+    
+        To add an assignment, click 'Add Assignment' tab in the top of the left hand side panel.
+        Here, enter a title in the 'Title' box, then choose a course from the combo box, then, you 
+        may click the drop down to find a calendar style popup to appear where you can choose
+        the due date for the assignment and modify the due date time. You then can add the 
+        percentage of the assignment that you have already completed. 
+        
+        After all of these fields are filled in, then you can click the 'Add Assignment' button at 
+        the top of the panel. The assignment will then show up in the 'Notifications' panel 
+        on the right hand side of the program. The assignments will be order based on due date.
+        
+    Seeing Assignment Details:
+        Simply double click on the assignment in the 'Notifications' panel on the right side of 
+        the program.
+        
+        A popup will appear with all of the information about the assignment. The title, course it 
+        is assigned to, due date, and percent completed.
+        
+    Updating Percent Complete:
+        After viewing the assignment that you would like to edit's assignment details, you can see 
+        that there is an area where you can change the percent complete of that assignment. 
+        If you click 'Save' then the value that you have entered will be saved ad the assignment's
+        percentage complete. 
+        
+    Removing an Assignment:
+        To remove an assignment, double click the assignment to see it's additional details. 
+        Then set the percent complete to 100. You will then be prompted with a warning stating
+        that by setting the percent complete you will be removing the assignment. If you choose 'Yes'
+        the percent will be set to 100 and then removed from the 'Notifications' panel.
